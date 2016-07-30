@@ -1,0 +1,25 @@
+ext{
+    versions = [
+	spring : '3.0.5.RELEASE',
+	emma:'2.0.5312',
+	lufax_fa_kernel: '0.0.0.1.SNAPSHOT']
+    libraries=[
+   	 //aspectJ_version= "1.6.11"
+    	aspectjrt : "org.aspectj:aspectjrt:1.6.11",
+    	aspectjweaver : "org.aspectj:aspectjweaver:1.6.11",
+	//cglib
+	 cglib : "cglib:cglib:2.2",
+	//commons
+	commons_lang3 : 'org.apache.commons:commons-lang3:3.1',
+	log4j:"log4j:log4j:1.2.16",
+	gson : "com.google.code.gson:gson:1.7.2",
+	//emma
+	 emma: "emma:emma:${versions.emma}",
+	 emma_ant: "emma:emma_ant:${versions.emma}",
+	//junit
+	junit:          'junit:junit:4.11',
+	//spring
+	spring_context : "org.springframework:spring-context:${versions.spring}",
+	spring_test:     "org.springframework:spring-test:${versions.spring}"
+    ]
+}

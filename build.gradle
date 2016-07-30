@@ -1,0 +1,128 @@
+apply from:'libraries.gradle'
+
+version='0.0.1-SNAPSHOT'
+group='com.github.ipolaris'
+
+
+	apply plugin: 'java'
+    apply plugin: 'eclipse-wtp'
+    apply plugin: 'idea'
+    apply plugin: 'maven'
+    
+    sourceCompatibility = '1.6'
+    targetCompatibility = '1.6'
+    
+    repositories {
+		mavenCentral()
+		mavenLocal()
+    }  
+    sourceSets.main.resources{
+        if(project.hasProperty('profile')){
+            srcDir 'src/main/resources-'+project.profile
+            srcDir 'src/com.spring.test/resources-'+project.profile
+        }
+    }
+    configurations {
+        emma
+        compile.exclude module: 'google-collections'
+    }
+    configurations {
+     		configurations {
+            		all*.exclude module: 'log4j-over-slf4j'
+            		all*.exclude module: 'slf4j-log4j12'
+                    emma
+                    compile.exclude module: 'google-collections'
+     		}		
+    }
+    idea {
+        module{
+     			jdkName = '1.6'
+        }	
+    }
+    task 'create-dirs' <<{
+        sourceSets*.java.srcDirs*.each { it.mkdirs() }
+                sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+    }
+    task createWebProject(dependsOn: 'create-dirs') << {
+ 		 def webAppDir = file("src/main/webapp/WEB-INF")
+ 		 webAppDir.mkdirs()
+    }
+    //对于非项目工程目录，删除eclipse 识别的 .project文件，方便一次性导入代码库中的所有项目 
+    eclipseProject.doLast {
+        if (!new File("$projectDir/src").exists() && !new File("$projectDir/gen-java").exists()) {
+            ant.delete dir: '.settings'
+            ant.delete file: '.project'
+            ant.delete file: '.classpath'
+        }
+    }
+    task sourceJar(type: Jar) {
+        from sourceSets.main.allJava
+        classifier "sources"
+    }
+
+    artifacts {
+        archives jar
+        archives sourceJar
+    }
+
+
+    test {
+        jvmArgs "-Demma.coverage.out.file=build/tmp/emma/metadata.emma", "-Demma.coverage.out.merge=true"
+
+        doFirst {
+            ant.taskdef(name: "emma", classname: "com.vladium.emma.emmaTask", classpath: configurations.emma.asPath)
+            ant.path(id: "run.classpath") {
+                pathelement(location: sourceSets.main.output.classesDir.absolutePath)
+            }
+            ant.emma(verbosity: 'info') {
+                instr(merge: "true", destdir: 'build/tmp/emma/instr', instrpathref: "run.classpath", metadatafile: 'build/tmp/emma/metadata.emma') {
+                    instrpath {
+                        fileset(dir: sourceSets.main.output.classesDir.absolutePath, includes: "*.class")
+                    }
+                }
+            }
+            setClasspath(files("$buildDir/tmp/emma/instr") + configurations.emma + getClasspath())
+        }
+        doLast {
+            ant.emma(enabled: "true") {
+                report(sourcepath: "src/main/java") {
+                    fileset(dir: "build/tmp/emma") {
+                        include(name: "*.emma")
+                    }
+                    txt(outfile: "build/reports/emma/coverage.txt")
+                    html(outfile: "build/reports/emma/coverage.html")
+                    xml(outfile: "build/reports/emma/coverage.xml")
+                }
+            }
+        }
+    }
+
+
+    
+
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+dependencies {
+	compile(
+			libraries.spring_context,
+			libraries.spring_test,
+			libraries.commons_lang3,
+			libraries.aspectjrt,
+			libraries.aspectjweaver,
+			libraries.cglib,
+			libraries.gson,
+			libraries.log4j)
+	testCompile(libraries.junit)
+	emma (libraries.emma, libraries.emma_ant)
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url:mavenLocal().url)
+            snapshotRepository(url:mavenLocal().url)
+        }
+    }
+}
+
+
