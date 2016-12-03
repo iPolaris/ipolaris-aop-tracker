@@ -3,9 +3,8 @@
 	
 使用方式：
 	项目spring配置文件添加<import resource="classpath*:spring/application-ipolaris-aop-tracker.xml"></import>
-	若先对类的方法实现拦截记录，可在类上添加ClassTracker注解，同时制定ITrackerRecorder的实现类，用于执行自定义的拦截行为，默认分配
-	DefaultTrackerRecorder（简单的日志记录：入参，执行结果，异常记录，执行时间）
-	
+	若先对类的方法实现拦截记录，可在类上添加ClassTracker注解，同时指定ITrackerRecorder的实现类，用于执行自定义的拦截行为，默认分配
+	DefaultTrackerRecorder（简单的日志记录：入参，执行结果，异常记录，执行时间），当然我们使用Spring来帮我们实现了AOP，还要在类上添加Service或Component注解	
 注：
 	由于动态代理的实现原理，只会拦截到类被外部调用的方法，内部的方法调用（this）默认是拦截不到的，如果想拦截，可继承AbstractProxyTrackerUtil
 	先使用stepTrackerProxy方法获取代理类，然后在执行内部方法，如：Test类里有A，B两个方法，A调用B，test.A()时，A会被拦截记录，B不会被拦截记录，
